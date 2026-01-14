@@ -1,0 +1,123 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Annotated API",
+    "version": "1.0.0",
+    "description": "API with x-cli annotations"
+  },
+  "paths": {
+    "/v1/tasks/{taskId}/activities": {
+      "get": {
+        "operationId": "listTaskActivities",
+        "summary": "List task activities",
+        "tags": ["tasks"],
+        "x-cli": {
+          "name": "tasks activities",
+          "aliases": ["act", "a"]
+        },
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            },
+            "x-cli": {
+              "shorthand": "p"
+            }
+          },
+          {
+            "name": "X-Org-Id",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-cli": {
+              "flag": "org",
+              "shorthand": "o",
+              "env": "ORG_ID"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of activities",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "type": "object" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/internal/sync": {
+      "post": {
+        "operationId": "internalSync",
+        "summary": "Internal sync operation",
+        "tags": ["internal"],
+        "x-cli": {
+          "hidden": true
+        },
+        "responses": {
+          "200": {
+            "description": "Sync complete",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/users/{userId}": {
+      "get": {
+        "operationId": "getUser",
+        "summary": "Get user by ID",
+        "tags": ["users"],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "x-cli": {
+              "positional": false,
+              "flag": "user"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,68 @@
+package commands
+
+import (
+	"fmt"
+	"os"
+	"strings"
+	"time"
+
+	"github.com/spf13/cobra"
+	"{{.ModuleName}}/internal/runtime"
+)
+
+var (
+	baseURL     string
+	timeout     time.Duration
+	extraHeaders []string
+	rt          *runtime.Runtime
+	config      *runtime.Config
+)
+
+var rootCmd = &cobra.Command{
+	Use:   "{{.AppName}}",
+	Short: "CLI for {{.AppName}} API",
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		// Load config
+		var err error
+		config, err = runtime.LoadConfig("{{.AppName}}")
+		if err != nil {
+			return fmt.Errorf("failed to load config: %w", err)
+		}
+
+		// Determine base URL (flag > env > config)
+		if baseURL == "" {
+			baseURL = config.BaseURL
+		}
+		if baseURL == "" {
+			return fmt.Errorf("base URL is required. Set via --base-url flag, %s_BASE_URL env var, or config file", strings.ToUpper("{{.AppName}}"))
+		}
+
+		// Initialize runtime
+		rt = runtime.New(baseURL, timeout)
+
+		// Add headers from config
+		for k, v := range config.Headers {
+			rt.AddHeader(k, v)
+		}
+
+		// Add headers from command line
+		for _, h := range extraHeaders {
+			parts := strings.SplitN(h, ":", 2)
+			if len(parts) == 2 {
+				rt.AddHeader(strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1]))
+			}
+		}
+
+		return nil
+	},
+}
+
+func init() {
+	rootCmd.PersistentFlags().StringVar(&baseURL, "base-url", os.Getenv(strings.ToUpper("{{.AppName}}")+"_BASE_URL"), "Base URL for the API")
+	rootCmd.PersistentFlags().DurationVar(&timeout, "timeout", 30*time.Second, "Request timeout")
+	rootCmd.PersistentFlags().StringArrayVar(&extraHeaders, "header", nil, "Extra headers (can be specified multiple times)")
+}
+
+func Execute() error {
+	return rootCmd.Execute()
+}

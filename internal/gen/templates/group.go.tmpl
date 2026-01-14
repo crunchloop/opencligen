@@ -1,0 +1,14 @@
+package commands
+
+import (
+	"github.com/spf13/cobra"
+)
+
+var {{.VarName}}Cmd = &cobra.Command{
+	Use:   "{{.Name}}",
+	Short: "{{.Description}}",
+}
+
+func init() {
+	rootCmd.AddCommand({{.VarName}}Cmd)
+}

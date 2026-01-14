@@ -1,0 +1,103 @@
+package commands
+
+import (
+	"context"
+	"fmt"
+	"os"
+	"strconv"
+
+	"github.com/spf13/cobra"
+	"{{.ModuleName}}/internal/runtime"
+)
+
+{{- $opVarName := .OpVarName}}
+{{- $hasBody := .HasJSONBody}}
+
+// Flag variables for {{$opVarName}}
+var (
+{{- range .Flags}}
+	{{$opVarName}}{{.VarName}} string
+{{- end}}
+{{- if $hasBody}}
+	{{$opVarName}}Data string
+{{- end}}
+)
+
+var {{$opVarName}}Cmd = &cobra.Command{
+	Use:   "{{.Use}}",
+	Short: "{{.Summary}}",
+{{- if .Aliases}}
+	Aliases: []string{ {{- range $i, $a := .Aliases}}{{if $i}}, {{end}}"{{$a}}"{{end -}} },
+{{- end}}
+{{- if .Hidden}}
+	Hidden: true,
+{{- end}}
+	RunE: func(cmd *cobra.Command, args []string) error {
+		ctx := context.Background()
+
+		// Build request
+		req := runtime.NewRequest("{{.Method}}", "{{.Path}}")
+
+{{- range $i, $p := .Positionals}}
+		// Positional argument: {{$p.Name}}
+		if len(args) <= {{$i}} {
+			return fmt.Errorf("missing required argument: {{$p.Name}}")
+		}
+		req.SetPathParam("{{$p.Name}}", args[{{$i}}])
+{{- end}}
+
+{{- range .Flags}}
+		// {{.In}} parameter: {{.Name}}
+{{- if .Required}}
+		if {{$opVarName}}{{.VarName}} == "" {
+{{- if .EnvVar}}
+			{{$opVarName}}{{.VarName}} = os.Getenv("{{.EnvVar}}")
+{{- end}}
+			if {{$opVarName}}{{.VarName}} == "" {
+				return fmt.Errorf("missing required {{.In}} parameter: --{{.FlagName}}")
+			}
+		}
+{{- end}}
+		if {{$opVarName}}{{.VarName}} != "" {
+{{- if eq .In "query"}}
+			req.SetQueryParam("{{.Name}}", {{$opVarName}}{{.VarName}})
+{{- else if eq .In "header"}}
+			req.SetHeader("{{.Name}}", {{$opVarName}}{{.VarName}})
+{{- else if eq .In "path"}}
+			req.SetPathParam("{{.Name}}", {{$opVarName}}{{.VarName}})
+{{- end}}
+		}
+{{- end}}
+
+{{- if $hasBody}}
+		// Request body
+		if {{$opVarName}}Data != "" {
+			body, err := runtime.LoadBody({{$opVarName}}Data)
+			if err != nil {
+				return fmt.Errorf("failed to load body: %w", err)
+			}
+			req.SetBody(body)
+		}
+{{- end}}
+
+		return rt.Do(ctx, req)
+	},
+}
+
+func init() {
+{{- range .Flags}}
+	{{$opVarName}}Cmd.Flags().StringVar(&{{$opVarName}}{{.VarName}}, "{{.FlagName}}", "{{.DefaultStr}}", "{{.Description}}")
+{{- if .Shorthand}}
+	{{$opVarName}}Cmd.Flags().Lookup("{{.FlagName}}").Shorthand = "{{.Shorthand}}"
+{{- end}}
+{{- end}}
+{{- if $hasBody}}
+	{{$opVarName}}Cmd.Flags().StringVar(&{{$opVarName}}Data, "data", "", "Request body (JSON string, @file, or @- for stdin)")
+{{- end}}
+
+	{{.ParentVarName}}Cmd.AddCommand({{$opVarName}}Cmd)
+}
+
+// Helper for unused imports
+var _ = strconv.Itoa
+var _ = os.Getenv
