@@ -138,15 +138,15 @@ func TestBuild_TasksCreateHasUserIdAndDataFlags(t *testing.T) {
 	}
 
 	// Check for --user-id flag (X-User-Id header)
-	var userIdFlag *ParamPlan
+	var userIDFlag *ParamPlan
 	for i := range createOp.Flags {
 		if createOp.Flags[i].FlagName == "user-id" {
-			userIdFlag = &createOp.Flags[i]
+			userIDFlag = &createOp.Flags[i]
 			break
 		}
 	}
 
-	if userIdFlag == nil {
+	if userIDFlag == nil {
 		t.Error("expected --user-id flag (from X-User-Id header)")
 	}
 

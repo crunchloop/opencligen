@@ -15,12 +15,13 @@ func Build(s *spec.Spec, appName, moduleName string) *Plan {
 
 	// Group operations by tag
 	groups := make(map[string][]spec.Operation)
-	for _, op := range s.Operations {
+	for i := range s.Operations {
+		op := &s.Operations[i]
 		tag := op.Tag
 		if tag == "" {
 			tag = "default"
 		}
-		groups[tag] = append(groups[tag], op)
+		groups[tag] = append(groups[tag], *op)
 	}
 
 	// Sort group names for deterministic output
@@ -45,8 +46,8 @@ func buildGroupPlan(name string, ops []spec.Operation) GroupPlan {
 		Name: DeriveGroupName(name),
 	}
 
-	for _, op := range ops {
-		opPlan := buildOpPlan(name, op)
+	for i := range ops {
+		opPlan := buildOpPlan(name, ops[i])
 		group.Operations = append(group.Operations, opPlan)
 	}
 
@@ -88,17 +89,19 @@ func buildOpPlan(groupName string, op spec.Operation) OpPlan {
 	var pathParams []spec.Param
 	var otherParams []spec.Param
 
-	for _, p := range op.Params {
+	for i := range op.Params {
+		p := &op.Params[i]
 		if p.In == "path" {
-			pathParams = append(pathParams, p)
+			pathParams = append(pathParams, *p)
 		} else {
-			otherParams = append(otherParams, p)
+			otherParams = append(otherParams, *p)
 		}
 	}
 
 	// Path params become positionals by default (in path order)
-	for _, p := range pathParams {
-		paramPlan := buildParamPlan(p)
+	for i := range pathParams {
+		p := &pathParams[i]
+		paramPlan := buildParamPlan(*p)
 
 		// Check if explicitly marked as non-positional
 		isPositional := true
@@ -114,8 +117,8 @@ func buildOpPlan(groupName string, op spec.Operation) OpPlan {
 	}
 
 	// Other params become flags
-	for _, p := range otherParams {
-		paramPlan := buildParamPlan(p)
+	for i := range otherParams {
+		paramPlan := buildParamPlan(otherParams[i])
 		opPlan.Flags = append(opPlan.Flags, paramPlan)
 	}
 

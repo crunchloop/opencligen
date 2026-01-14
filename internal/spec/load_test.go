@@ -41,23 +41,23 @@ func TestLoad_CreateTaskHasRequiredUserIdHeader(t *testing.T) {
 	}
 
 	// Check for X-User-Id header param
-	var userIdParam *Param
+	var userIDParam *Param
 	for i := range createTaskOp.Params {
 		if createTaskOp.Params[i].Name == "X-User-Id" {
-			userIdParam = &createTaskOp.Params[i]
+			userIDParam = &createTaskOp.Params[i]
 			break
 		}
 	}
 
-	if userIdParam == nil {
+	if userIDParam == nil {
 		t.Fatal("expected to find X-User-Id parameter")
 	}
 
-	if userIdParam.In != "header" {
-		t.Errorf("expected X-User-Id to be in header, got '%s'", userIdParam.In)
+	if userIDParam.In != "header" {
+		t.Errorf("expected X-User-Id to be in header, got '%s'", userIDParam.In)
 	}
 
-	if !userIdParam.Required {
+	if !userIDParam.Required {
 		t.Error("expected X-User-Id to be required")
 	}
 }

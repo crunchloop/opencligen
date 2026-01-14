@@ -18,7 +18,7 @@ linters:
     - unconvert
     - bodyclose
     - nilerr
-    - exportloopref
+    - copyloopvar
     - gocritic
     - revive
 

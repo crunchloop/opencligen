@@ -7,10 +7,11 @@ import (
 	"os/exec"
 	"path/filepath"
 
+	"github.com/spf13/cobra"
+
 	"github.com/crunchloop/opencligen/internal/gen"
 	"github.com/crunchloop/opencligen/internal/plan"
 	"github.com/crunchloop/opencligen/internal/spec"
-	"github.com/spf13/cobra"
 )
 
 // Version information set by ldflags during build
@@ -155,9 +156,11 @@ func printPlan(p *plan.Plan) {
 	fmt.Printf("\n=== Command Plan for %s ===\n\n", p.AppName)
 	fmt.Printf("Module: %s\n\n", p.ModuleName)
 
-	for _, group := range p.Groups {
+	for gi := range p.Groups {
+		group := &p.Groups[gi]
 		fmt.Printf("Group: %s\n", group.Name)
-		for _, op := range group.Operations {
+		for oi := range group.Operations {
+			op := &group.Operations[oi]
 			cmdPath := ""
 			for i, part := range op.CommandPath {
 				if i > 0 {
@@ -167,7 +170,8 @@ func printPlan(p *plan.Plan) {
 			}
 
 			flags := ""
-			for _, f := range op.Flags {
+			for fi := range op.Flags {
+				f := &op.Flags[fi]
 				if flags != "" {
 					flags += ", "
 				}
@@ -179,7 +183,8 @@ func printPlan(p *plan.Plan) {
 			}
 
 			positionals := ""
-			for _, pos := range op.Positionals {
+			for pi := range op.Positionals {
+				pos := &op.Positionals[pi]
 				positionals += fmt.Sprintf(" <%s>", pos.Name)
 			}
 

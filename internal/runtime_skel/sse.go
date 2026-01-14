@@ -19,6 +19,16 @@ func isEventStream(contentType string) bool {
 	return strings.Contains(contentType, "text/event-stream")
 }
 
+// hasAnyPrefix checks if s has any of the given prefixes
+func hasAnyPrefix(s string, prefixes ...string) bool {
+	for _, prefix := range prefixes {
+		if strings.HasPrefix(s, prefix) {
+			return true
+		}
+	}
+	return false
+}
+
 // handleSSE handles Server-Sent Events response
 func handleSSE(reader io.Reader, out io.Writer) error {
 	scanner := bufio.NewScanner(reader)
@@ -69,9 +79,7 @@ func handleSSE(reader io.Reader, out io.Writer) error {
 		}
 
 		// Handle other SSE fields (event, id, retry) - we just skip them for now
-		if strings.HasPrefix(line, "event:") ||
-			strings.HasPrefix(line, "id:") ||
-			strings.HasPrefix(line, "retry:") {
+		if hasAnyPrefix(line, "event:", "id:", "retry:") {
 			continue
 		}
 	}

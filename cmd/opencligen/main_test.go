@@ -68,9 +68,9 @@ func createTestCommand() *cobra.Command {
 
 func TestGen_MissingRequiredFlags(t *testing.T) {
 	tests := []struct {
-		name        string
-		args        []string
-		wantErrMsg  string
+		name       string
+		args       []string
+		wantErrMsg string
 	}{
 		{
 			name:       "missing all flags",

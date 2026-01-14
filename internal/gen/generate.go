@@ -178,8 +178,9 @@ func (g *Generator) generateCommands() error {
 		}
 
 		// Generate operation files
-		for _, op := range group.Operations {
-			if err := g.generateOperation(opTmpl, group, op); err != nil {
+		for oi := range group.Operations {
+			op := &group.Operations[oi]
+			if err := g.generateOperation(opTmpl, group, *op); err != nil {
 				return fmt.Errorf("failed to generate operation %s: %w", op.OperationID, err)
 			}
 		}
@@ -194,7 +195,8 @@ func (g *Generator) generateOperation(tmpl *template.Template, group plan.GroupP
 
 	// Build positionals data
 	positionals := make([]map[string]interface{}, len(op.Positionals))
-	for i, p := range op.Positionals {
+	for i := range op.Positionals {
+		p := &op.Positionals[i]
 		positionals[i] = map[string]interface{}{
 			"Name":    p.Name,
 			"VarName": toVarName(p.FlagName),
@@ -203,7 +205,8 @@ func (g *Generator) generateOperation(tmpl *template.Template, group plan.GroupP
 
 	// Build flags data
 	flags := make([]map[string]interface{}, len(op.Flags))
-	for i, p := range op.Flags {
+	for i := range op.Flags {
+		p := &op.Flags[i]
 		defaultStr := ""
 		if p.Default != nil {
 			defaultStr = fmt.Sprintf("%v", p.Default)
@@ -225,14 +228,14 @@ func (g *Generator) generateOperation(tmpl *template.Template, group plan.GroupP
 
 	// Build use string with positionals
 	use := cmdName
-	for _, p := range op.Positionals {
-		use += fmt.Sprintf(" <%s>", p.Name)
+	for i := range op.Positionals {
+		use += fmt.Sprintf(" <%s>", op.Positionals[i].Name)
 	}
 
 	// Check if any flags are required
 	hasRequiredFlags := false
-	for _, p := range op.Flags {
-		if p.Required {
+	for i := range op.Flags {
+		if op.Flags[i].Required {
 			hasRequiredFlags = true
 			break
 		}

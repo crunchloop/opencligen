@@ -64,7 +64,8 @@ func toKebabCase(s string) string {
 
 	var result strings.Builder
 	for i, r := range s {
-		if unicode.IsUpper(r) {
+		switch {
+		case unicode.IsUpper(r):
 			if i > 0 {
 				// Don't add hyphen if previous char was already uppercase (e.g., "ID" -> "id")
 				prev := rune(s[i-1])
@@ -73,9 +74,9 @@ func toKebabCase(s string) string {
 				}
 			}
 			result.WriteRune(unicode.ToLower(r))
-		} else if r == '_' || r == ' ' {
+		case r == '_' || r == ' ':
 			result.WriteRune('-')
-		} else {
+		default:
 			result.WriteRune(r)
 		}
 	}

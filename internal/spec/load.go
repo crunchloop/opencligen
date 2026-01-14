@@ -122,7 +122,9 @@ func extractOperation(path, method string, op *openapi3.Operation, pathParams op
 	}
 
 	// Extract parameters (path-level + operation-level)
-	allParams := append(pathParams, op.Parameters...)
+	allParams := make([]*openapi3.ParameterRef, 0, len(pathParams)+len(op.Parameters))
+	allParams = append(allParams, pathParams...)
+	allParams = append(allParams, op.Parameters...)
 	for _, paramRef := range allParams {
 		if paramRef == nil || paramRef.Value == nil {
 			continue
