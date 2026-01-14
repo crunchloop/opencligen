@@ -1,0 +1,290 @@
+openapi: "3.1.0"
+info:
+  title: Notes API
+  version: "1.0.0"
+  description: A note-taking API demonstrating OpenAPI 3.1 compatibility
+
+servers:
+  - url: https://notes.example.com/api
+    description: Production
+
+paths:
+  /notes:
+    get:
+      operationId: listNotes
+      summary: List all notes
+      description: Retrieve notes with filtering and sorting options
+      tags:
+        - notes
+      parameters:
+        - name: status
+          in: query
+          description: Filter by note status
+          schema:
+            type: string
+            enum:
+              - draft
+              - published
+              - archived
+        - name: search
+          in: query
+          description: Full-text search query
+          schema:
+            type: string
+        - name: created_after
+          in: query
+          description: Filter notes created after this date
+          schema:
+            type: string
+            format: date
+        - name: sort
+          in: query
+          description: Sort order
+          schema:
+            type: string
+            default: "-created_at"
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+      responses:
+        "200":
+          description: List of notes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  notes:
+                    type: array
+                    items:
+                      type: object
+                  total:
+                    type: integer
+    post:
+      operationId: createNote
+      summary: Create a new note
+      tags:
+        - notes
+      parameters:
+        - name: X-Client-Version
+          in: header
+          description: Client application version
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+              properties:
+                title:
+                  type: string
+                content:
+                  type: string
+                tags:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        "201":
+          description: Note created
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /notes/{noteId}:
+    parameters:
+      - name: noteId
+        in: path
+        required: true
+        description: Note unique identifier
+        schema:
+          type: string
+    get:
+      operationId: getNote
+      summary: Get a note by ID
+      tags:
+        - notes
+      parameters:
+        - name: include
+          in: query
+          description: Related data to include
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Note details
+          content:
+            application/json:
+              schema:
+                type: object
+    patch:
+      operationId: updateNote
+      summary: Partially update a note
+      description: Update specific fields of an existing note
+      tags:
+        - notes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                content:
+                  type: string
+                status:
+                  type: string
+                  enum:
+                    - draft
+                    - published
+                    - archived
+      responses:
+        "200":
+          description: Note updated
+          content:
+            application/json:
+              schema:
+                type: object
+    delete:
+      operationId: deleteNote
+      summary: Delete a note
+      tags:
+        - notes
+      parameters:
+        - name: permanent
+          in: query
+          description: Skip trash and delete permanently
+          schema:
+            type: boolean
+            default: false
+      responses:
+        "204":
+          description: Note deleted
+
+  /notes/{noteId}/share:
+    post:
+      operationId: shareNote
+      summary: Share a note with others
+      tags:
+        - notes
+      x-cli:
+        aliases:
+          - sh
+      parameters:
+        - name: noteId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                permission:
+                  type: string
+                  enum:
+                    - read
+                    - write
+                    - admin
+                  default: read
+      responses:
+        "200":
+          description: Note shared
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  share_url:
+                    type: string
+
+  /tags:
+    get:
+      operationId: listTags
+      summary: List all tags
+      description: Get all unique tags across notes
+      tags:
+        - tags
+      parameters:
+        - name: min_count
+          in: query
+          description: Minimum usage count
+          schema:
+            type: integer
+            minimum: 1
+          x-cli:
+            shorthand: m
+      responses:
+        "200":
+          description: List of tags
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /sync:
+    get:
+      operationId: subscribeSync
+      summary: Real-time sync stream
+      description: Subscribe to note changes via SSE
+      tags:
+        - sync
+      parameters:
+        - name: X-Session-Token
+          in: header
+          required: true
+          description: Active session token
+          schema:
+            type: string
+          x-cli:
+            flag: session
+            shorthand: s
+            env: NOTES_SESSION_TOKEN
+        - name: types
+          in: query
+          description: Event types to subscribe to
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Event stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+
+  /internal/metrics:
+    get:
+      operationId: getMetrics
+      summary: Internal metrics endpoint
+      tags:
+        - internal
+      x-cli:
+        hidden: true
+      responses:
+        "200":
+          description: Metrics data
+          content:
+            application/json:
+              schema:
+                type: object
